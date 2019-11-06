@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import Quote from './components/Quote';
 import loadData from './utilities/loadData';
 
@@ -7,7 +8,7 @@ import './App.css';
 class CategorySelector extends Component {
   state = {
       loading: true,
-      categories: ['fetching categories...'],
+      categories: null,
     }
 
     componentDidMount() {
@@ -19,7 +20,12 @@ class CategorySelector extends Component {
       loading: true,
     });
 
-    const categories = await loadData('https://api.chucknorris.io/jokes/categories');
+    const categories = await loadData('https://api.chucknorris.io/jokes/categories')
+      .catch((err) => {
+        this.setState({
+          loading: false
+        })
+      });
 
     this.setState({
       categories,
@@ -29,34 +35,49 @@ class CategorySelector extends Component {
 
   render() {
     const { categories } = this.state;
-    return (
-      <select>
-      {categories.map((category) => (
-        <option key={category} value={category}>
-          {category}
-        </option>
-      ))}
-      </select>
-    )
+    let component;
+    if (this.state.categories) {
+      component = (
+          <nav className="navbar">
+            <ul>
+            <li><Link to="/">HOME</Link></li>
+              {categories.map((category) => (
+                  <li key={category}>
+                    <Link to={`/category/${category}`}>{category}</Link>
+                  </li>
+                )
+              )}
+            </ul>
+          </nav>
+        )
+    } else {
+      component = (
+        <nav className="navbar">
+          <ul>
+            <li>
+              [LOADING CATEGORIES]
+            </li>
+          </ul>
+      </nav>
+    )}
+    return component;
   }
 }
 
-class App extends Component {
-  state = {
-    category: 'dev'
-  }
-
-  render() {
-    const { category } = this.state;
+function App() {
     return (
       <div className="App">
-      <br/>
-      <Quote category={category}/>
-      <br/>
-      <CategorySelector/>
+        <br/>
+        <Router>
+          <CategorySelector/>
+          <Route path="/category/:category" component={Quote}/>
+          <Route exact path="/">
+            <p>this is the <b>root</b> route</p>
+          </Route>
+          <br/>
+        </Router>
     </div>
     )
-  }
 }
 
 export default App;

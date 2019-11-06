@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import loadData from '../utilities/loadData';
 
+import './Quote.css'
+
 export default class Quote extends Component {
     state = {
         status: 'waiting for input',
@@ -11,26 +13,25 @@ export default class Quote extends Component {
     componentDidMount() {
         setInterval(() => {
             if (this.state.fetching === true) {
-                this.setState({status: this.state.status + '.'})
+                const status = this.state.status.length < 50 ? this.state.status + '.' : 'fetching'
+                this.setState({status})
             }
-        }, 250)
+        }, 150)
     }
 
-    componentDidUpdate(prevProps) {
-        if (prevProps.category !== this.props.category) {
-            this.getQuote();
-        }
+    componentDidUpdate() {
+        // this.getQuote()
     }
 
     getQuote = async () => {
-        const { category } = this.props;
+        const { match: { params } } = this.props;
+
         this.setState({
             fetching: true,
             status: 'fetching',
             quote: 'fetching quotes',
         });
-        const data = await loadData(`https://api.chucknorris.io/jokes/random?category=${category}`);
-
+        const data = await loadData(`https://api.chucknorris.io/jokes/random?category=${params.category}`)
         const quote = data.value;
         this.setState({
             quote,
@@ -43,16 +44,16 @@ export default class Quote extends Component {
 
     render() {
         const { quote, status } = this.state;
-        const { category } = this.props;
+        const { match: { params } } = this.props;
         return (
-            
+            <div className="quote">
+                <p><b>status: </b> {status}</p>
+                <p><b>category: </b> {params.category}</p>
+                <h3>chuck quote:</h3>
+                <code>{quote}</code>
                 <div>
-            <p><b>status: </b> {status}</p>
-            <h3>chuck quote:</h3>
-            <code>{quote}</code>
-            <div>
-                <button onClick={this.getQuote}>get a quote from the {category} category</button>
-            </div>
+                    <button onClick={this.getQuote}>get a quote from the {params.category} category</button>
+                </div>
             </div>
         )
     }
